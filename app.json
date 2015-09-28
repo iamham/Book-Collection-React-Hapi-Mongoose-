@@ -1,0 +1,11 @@
+{
+  "name": "My Book Collection",
+  "description": "My first react app",
+  "keywords": [ ],
+  "repository": "",
+  "logo": "",
+  "website": "",
+  "success_url": "/",
+  "env" : {}
+}
+

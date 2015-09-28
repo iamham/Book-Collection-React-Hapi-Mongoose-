@@ -1,0 +1,31 @@
+{
+  "name": "book-collection",
+  "version": "0.0.0",
+  "description": "My first react app.",
+  "main": "server.js",
+  "dependencies": {
+    "body-parser": "^1.4.3",
+    "hapi": "^10.1.0",
+    "inert": "^3.0.1",
+    "mongoose": "^4.1.8",
+    "react": "^0.13.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [],
+  "author": "ham",
+  "bugs": {
+    "url": ""
+  },
+  "homepage": "",
+  "engines": {
+    "node": "0.12.x"
+  }
+}
