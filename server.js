@@ -3,6 +3,7 @@ var Hapi = require('hapi');
 var mongoose = require('mongoose');
 var React = require('react');
 var Inert = require('inert');
+var HapiSass = require('hapi-sass')
 
 var server = new Hapi.Server({
     connections: {
@@ -22,8 +23,20 @@ var bookSchema = new mongoose.Schema({
 });
 var Book = mongoose.model('Book', bookSchema);
 
+var sassOptions = {
+    src: './public/scripts',
+    dest: './public/css',
+    force: true,
+    debug: true,
+    routePath: '/css/{file}.css',
+    outputStyle: 'nested',
+    sourceComments: true
+};
+ 
 server.connection({ port: 3000 });
 server.register(Inert, function () {});
+
+//Server Route
 server.route({
     method: 'GET',
     path: '/{param*}',
@@ -35,7 +48,6 @@ server.route({
         }
     }
 });
-
 server.route({
   method: 'GET',
   path: '/api/book',
@@ -50,18 +62,30 @@ server.route({
     });
   }
 });
-
 server.route({
   method: 'GET',
-  path: '/api/book/{strSearch}',
+  path: '/api/search/',
   handler: function(request, reply) {
-  Book.find().or([{'title':{$regex:request.params.strSearch,'$options':'i'}},
+    Book.find(function(err, book) {
+      if (err) {
+        reply(err);
+        return;
+      }
+
+      reply(book);
+    });
+  }
+});
+server.route({
+  method: 'GET',
+  path: '/api/search/{strSearch}',
+  handler: function(request, reply) {
+        Book.find().or([{'title':{$regex:request.params.strSearch,'$options':'i'}},
                   {'author':{$regex:request.params.strSearch,'$options':'i'}},
                   {'genre': {$regex:request.params.strSearch,'$options':'i'}}]).exec(function(err, books) {
         reply(JSON.stringify(books));
   });
 }});
-
 server.route({
   method: 'POST',
   path: '/api/book',
@@ -82,9 +106,14 @@ server.route({
   }
 });
 
-server.start(function (err) {
-    if (err) {
-        throw err;
+server.register({
+        register: HapiSass,
+        options: sassOptions
     }
-    console.log('Server running at:', server.info.uri);
-});
+    , function (err) {
+        if (err) throw err;
+        server.start(function () {
+            server.log("Hapi server started @ " + server.info.uri);
+        });
+    }
+);

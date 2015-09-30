@@ -1,17 +1,7 @@
 //BookCollection (Parent Node)
 var BookCollection = React.createClass({
-  loadBooksFromServer: function() {
-    $.ajax({
-      url: this.props.url,
-      dataType: 'json',
-      cache: false,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.error(this.props.url, status, err.toString());
-      }.bind(this)
-    });
+      getInitialState: function() {
+          return {data: [], update:'Add your book here !'};
   },
   handleBookSubmit: function(book) {
     var books = this.state.data;
@@ -23,30 +13,21 @@ var BookCollection = React.createClass({
       type: 'POST',
       data: book,
       success: function(data) {
+          this.setState({update: 'Book Added, search your book !',searchQry:' '});
       }.bind(this),
       error: function(xhr, status, err) {
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
-  }, 
-  //Create data var
-  getInitialState: function() {
-    return {data: []};
   },   
-  //Call load data funtion from upper then render
-  componentDidMount: function() {
-    this.loadBooksFromServer();
-  },
   render: function() {
     return (
       <div className="BookCollection">
-            <div className="SearchBook">
-                
-            </div>
+            <SearchBookForm  url="/api/search/" />
             <div className="AddBook">
-                <h1>Add New Book</h1>
-                <AddBookForm onBookSubmit={this.handleBookSubmit} />
-                <BookList data={this.state.data} />
+                <h1>ADD NEW BOOK</h1>
+                <AddBookForm onBookSubmit={this.handleBookSubmit}  />
+                <Lastest data={this.state.update} />
             </div>
       </div>
     );
@@ -64,7 +45,7 @@ var AddBookForm = React.createClass({
     if (!title) {
       return;
     }
-    this.props.onBookSubmit({author: author, genre: genre,title: title});
+    this.props.onBookSubmit({author: author, genre: genre, title: title});
     React.findDOMNode(this.refs.author).value = '';
     React.findDOMNode(this.refs.title).value = '';
     React.findDOMNode(this.refs.genre).value = '';
@@ -81,14 +62,72 @@ var AddBookForm = React.createClass({
   }
 });
 
+var Lastest = React.createClass({
+  render: function() {
+      console.log(this.props.data);
+    return (
+      <p>{this.props.data}</p>
+    );
+  }
+});
+
+//Sub Search Form
+var SearchBookForm = React.createClass({
+    getInitialState: function() {
+    return {data: []};
+  },
+    componentDidMount: function() {
+    this.loadBooksFromServer();
+  },loadBooksFromServer: function() {
+    $.ajax({
+      url: '/api/book',
+      dataType: 'json',
+      cache: false,
+      success: function(data) {
+        this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
+      }.bind(this)
+    });
+  },
+  _onChange:function(e){
+      e.preventDefault();
+      var search = React.findDOMNode(this.refs.search).value;
+      console.log(search);
+      $.ajax({
+      url: this.props.url+search,
+      dataType: 'json',
+      cache: false,
+      type:'GET',
+      success: function(data) {
+          console.log(data);
+          this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
+      }.bind(this)
+    });
+  },
+  render: function() {
+    return (
+      <form className="SearchBook">
+        <input type="text" placeholder="Search book... Title, Author or Genre" ref="search" onChange={this._onChange} /><br />
+        <BookList data={this.state.data} />
+      </form>
+    );
+  }
+});
+
 //Sub Node 2 (Book List)
 var BookList = React.createClass({
   render: function() {
-    var bookNodes = this.props.data.map(function(book, index) {
+      console.log(this.props.data);
+      var bookNodes = this.props.data.map(function(book, index) {
       return (
-        <Book author={book.title} key={index}>
-         {book.author} {book.genre}
-        </Book>
+         <Book title={book.title} key={index}>
+          Author: {book.author} | Genre: {book.genre}
+         </Book>
       );
     });
     return (
@@ -110,7 +149,7 @@ var Book = React.createClass({
     return (
       <div className="book">
         <h2 className="bookTitle">
-          {this.props.author}
+          {this.props.title}
         </h2>
         <span dangerouslySetInnerHTML={this.rawMarkup()} />
       </div>
@@ -118,6 +157,7 @@ var Book = React.createClass({
   }
 });
 
+//Call to render parent node (BookCollection) @ div content
 React.render(
   <BookCollection url="/api/book" />,
   document.getElementById('content')
